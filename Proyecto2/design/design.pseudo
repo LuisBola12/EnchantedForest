@@ -1,0 +1,98 @@
+main (argc, argv[]):
+    file_name = argv[1]
+    path = argv[2]
+    threads = argv[3]
+
+    file_manager = new FileManager()
+    enchanted_forest = new EnchantedForest(threads)
+    char** matrix
+    vector<string> maps = file_manager.read_file(file_name)
+    int rows, columns, midnight_count
+
+    for index = 0 to maps.size():
+        matrix = file_manager.read_job_sub_case_files(maps[index], &rows, &columns, &midnight_count)
+        string result = enchanted_forest.enchanted_forest(matrix, rows, columns, midnight_count)
+        file_manager.output_file(result)
+    end for
+
+
+FileManager::read_file(file_name):
+    ifstream input_file(file_name)
+    vector<string> input_files
+    string store
+    while (getline(input_file, store)):
+        input_files.push_back(store)
+    end while
+
+    input_file.close()
+
+    return input_files
+
+FileManager::read_job_sub_case_files (map, &rows, &columns, &midnight_count):
+    char** new_matrix = create_matrix(rows)
+    midnight_count = get_midnight_count(map)
+    vector<string> input_file = read_file(map)
+    get_row_columns(input_file[0], rows, columns)
+    new_matrix = get_matrix(input_file)
+
+    return new_matrix
+
+
+EnchantedForest::enchanted_forest(actual_matrix, rows, columns, midnight_count):
+    char** next_day_matrix = create_matrix(rows, columns)
+    string result += "0: \n" + to_string(actual_matrix)
+    for index = 0 to abs(midnight_count):
+        test_rules(actual_matrix,next_day_matrix, rows, columns)
+        result += to_string(index) + ":\n" + to_string(next_day_matrix)
+        char** temp = actual_matrix
+        actual_matrix = next_day_matrix
+        next_day_matrix = temp
+    end for
+
+    return result
+
+EnchantedForest::test_rules(actual_matrix, &next_day_matrix, rows, columns):
+    for index1 = 0 to rows:
+        for index2 = 0 to columns:
+            next_day_matrix[index1][index2] = process_cell(actual_matrix, index1, index2, rows, columns)
+
+
+EnchantedForest::process_cell(actual_matrix, index1, index2, rows, columns) 
+
+  if (actual_matrix[index1][index2] == 'a'):
+
+    enchanted_lakes = find_neighbors('l', actual_matrix, index1, index2, rows, columns)
+    magic_trees = find_neighbors('a', actual_matrix, index1, index2, rows, columns) - 1
+
+    if (enchanted_lakes >= 4):
+      return 'l'
+    end if
+
+    if (magic_trees > 4):
+      return '-'
+    end if
+
+  end if
+
+  if (actual_matrix[index1][index2] == 'l'):
+
+    enchanted_lakes = find_neighbors('l', actual_matrix, index1, index2, rows, columns) - 1
+    
+    if (enchanted_lakes < 3):
+      return '-'
+    end if
+  
+  end if
+
+  if (actual_matrix[index1][index2] == '-'):
+
+    magic_trees = find_neighbors('a', actual_matrix, index1, index2, rows, columns)
+    
+    if (magic_trees >= 3):
+      return 'a'
+    end if
+
+  end if
+
+  return actual_matrix[index1][index2]
+
